@@ -89,9 +89,41 @@ model_data = {
 joblib.dump(model_data, 'model_new.joblib')
 print("Model and encoders saved to model_new.joblib")
 
-# models = ['Logistic Regression', 'Decision Tree', 'Random Forest', 'KNN']
-# accuracy = [lr_acc, dt_acc, rf_acc, knn_acc]
+def predict_placement(cgpa_10_scale):
+    # Convert 0-10 scale to 0-100 percentage
+    percentage = cgpa_10_scale * 10.0
+    
+    # Use default values for other features
+    # These were calculated as means/modes of the training data
+    input_data = {
+        'gender': 1, # Male
+        'ssc_p': 67.3,
+        'ssc_b': 0, # Central
+        'hsc_p': 66.3,
+        'hsc_b': 1, # Others
+        'hsc_s': 1, # Commerce
+        'degree_p': percentage,
+        'degree_t': 0, # Comm&Mgmt
+        'workex': 0, # No
+        'etest_p': 72.1,
+        'specialisation': 0, # Mkt&Fin
+        'mba_p': 62.3
+    }
+    
+    # Create DataFrame for prediction
+    input_df = pd.DataFrame([input_data])
+    
+    # Ensure feature order matches training
+    input_df = input_df[X.columns]
+    
+    # Predict
+    prob = lr.predict_proba(input_df)[0][1]
+    prediction = lr.predict(input_df)[0]
+    
+    status = "Placed" if prediction == 1 else "Not Placed"
+    print(f"\nExample Prediction for CGPA {cgpa_10_scale}:")
+    print(f"  Probability of Placement: {prob:.2%}")
+    print(f"  Status: {status}")
 
-# plt.bar(models, accuracy)
-# plt.title("Model Comparison")
-# plt.show()
+# Run an example prediction
+predict_placement(8.5)
