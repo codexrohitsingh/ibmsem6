@@ -12,33 +12,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import joblib
+
 df = pd.read_csv("Placement_Data_Full_Class.csv")
-df.head()
 
-df.shape
-df.info()
-df.describe()
-
-df.isnull().sum()
-
-df.drop('salary', axis=1, inplace=True)
-
-df.drop('sl_no', axis=1, inplace=True)
+df.drop(['salary', 'sl_no'], axis=1, inplace=True)
 
 from sklearn.preprocessing import LabelEncoder
 
-le = LabelEncoder()
-
-for col in df.select_dtypes(include='object'):
+encoders = {}
+for col in df.select_dtypes(include=['object', 'str']):
+    le = LabelEncoder()
     df[col] = le.fit_transform(df[col])
+    encoders[col] = le
 
-sns.countplot(x='status', data=df)
-plt.title("Placement Count")
-plt.show()
+# sns.countplot(x='status', data=df)
+# plt.title("Placement Count")
+# plt.show()
 
-plt.figure(figsize=(10,6))
-sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
-plt.show()
+# plt.figure(figsize=(10,6))
+# sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+# plt.show()
 
 from sklearn.model_selection import train_test_split
 
@@ -53,7 +47,7 @@ lr = LogisticRegression(max_iter=1000)
 lr.fit(X_train, y_train)
 
 lr_acc = lr.score(X_test, y_test)
-print("Logistic Regression Accuracy:", lr_acc)
+print(f"Logistic Regression Accuracy: {lr_acc:.4f}")
 
 from sklearn.tree import DecisionTreeClassifier
 
@@ -61,7 +55,7 @@ dt = DecisionTreeClassifier()
 dt.fit(X_train, y_train)
 
 dt_acc = dt.score(X_test, y_test)
-print("Decision Tree Accuracy:", dt_acc)
+print(f"Decision Tree Accuracy: {dt_acc:.4f}")
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -69,7 +63,7 @@ rf = RandomForestClassifier()
 rf.fit(X_train, y_train)
 
 rf_acc = rf.score(X_test, y_test)
-print("Random Forest Accuracy:", rf_acc)
+print(f"Random Forest Accuracy: {rf_acc:.4f}")
 
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -77,11 +71,27 @@ knn = KNeighborsClassifier()
 knn.fit(X_train, y_train)
 
 knn_acc = knn.score(X_test, y_test)
-print("KNN Accuracy:", knn_acc)
+print(f"KNN Accuracy: {knn_acc:.4f}")
 
-models = ['Logistic Regression', 'Decision Tree', 'Random Forest', 'KNN']
-accuracy = [lr_acc, dt_acc, rf_acc, knn_acc]
+# Save the best model (Logistic Regression often performs well here and is easy to port)
+# Or save all needed for inference
+model_data = {
+    'model': lr,
+    'encoders': encoders,
+    'features': X.columns.tolist(),
+    'accuracies': {
+        'Logistic Regression': lr_acc,
+        'Decision Tree': dt_acc,
+        'Random Forest': rf_acc,
+        'KNN': knn_acc
+    }
+}
+joblib.dump(model_data, 'model_new.joblib')
+print("Model and encoders saved to model_new.joblib")
 
-plt.bar(models, accuracy)
-plt.title("Model Comparison")
-plt.show()
+# models = ['Logistic Regression', 'Decision Tree', 'Random Forest', 'KNN']
+# accuracy = [lr_acc, dt_acc, rf_acc, knn_acc]
+
+# plt.bar(models, accuracy)
+# plt.title("Model Comparison")
+# plt.show()
